@@ -139,6 +139,15 @@ require('lazy').setup({
     end,
   },
 
+  -- Autopairs
+  {
+    'echasnovski/mini.pairs',
+    version = false,
+    config = function(self, opts)
+      require('mini.pairs').setup(opts)
+    end
+  },
+
   -- NOTE: Next Step on Your Neovim Journey: Add/Configure additional "plugins" for kickstart
   --       These are some example plugins that I've included in the kickstart repository.
   --       Uncomment any of the lines below to enable them.
