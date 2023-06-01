@@ -39,10 +39,52 @@ require'lazy'.setup{
     branch = 'anticonceal',
   },
   {
+    'hrsh7th/nvim-cmp', -- Autocomplete
+    dependencies = {
+      -- Snippet engine and cmp source
+      'L3MON4D3/LuaSnip',
+      'saadparwaiz1/cmp_luasnip',
+      -- LSP cmp
+      'hrsh7th/cmp-nvim-lsp',
+      -- Basic snippets
+      'rafamadriz/friendly-snippets',
+    },
+  },
+  {
     'folke/which-key.nvim', -- Useful for learning keybinds
     opts = {}
-  }
+  },
 }
+
+-- General vim options
+-------------------------------------------------------------------------------
+vim.o.colorcolumn = '80'
+
+-- System clipboard
+vim.o.clipboard = 'unnamedplus'
+
+-- Enable line numbers
+vim.wo.number = true
+-- Sign column takes up numbers
+vim.wo.signcolumn = 'number'
+
+-- Wrapped lines continue visually indented
+vim.o.breakindent = true
+
+-- Save undo history
+vim.o.undofile = true
+
+-- Highlight on search
+vim.o.hlsearch = false
+-- Case insensitive search
+vim.o.ignorecase = true
+vim.o.smartcase = true
+
+-- Truecolor
+vim.o.termguicolors = true
+
+-- Completion behavior
+vim.o.completeopt = 'menuone,noselect'
 
 -- Lsp config
 -------------------------------------------------------------------------------
@@ -79,5 +121,25 @@ nmap('<leader>i', vim.lsp.buf.implementation, "Jump to [i]mplementation")
 nmap('<leader>f', vim.lsp.buf.references, "Find re[f]erences")
 nmap('K', vim.lsp.buf.hover, "Hover documentation")
 nmap('<C-k>', vim.lsp.buf.signature_help, 'Signature documentation')
+
+-- nvim-cmp configuration
+-------------------------------------------------------------------------------
+
+local cmp = require 'cmp'
+local luasnip = require 'luasnip'
+require'luasnip.loaders.from_vscode'.lazy_load()
+luasnip.config.setup {}
+
+cmp.setup {
+  snippet = {
+    expand = function(args)
+      luasnip.lsp_expand(args.body)
+    end
+  },
+  sources = {
+    { name = 'nvim_lsp' },
+    { name = 'luasnip' },
+  },
+}
 
 -- vim: ts=2 sts=2 sw=2 et
