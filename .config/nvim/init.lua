@@ -2,7 +2,7 @@
 vim.g.mapleader = ' '
 vim.g.maplocalleader = ' '
 
--- Enable lua cache for faster load times 
+-- Enable lua cache for faster load times
 vim.loader.enable()
 
 -- Plugin manager setup
@@ -23,10 +23,26 @@ vim.opt.rtp:prepend(lazypath)
 -- Plugins
 -------------------------------------------------------------------------------
 require'lazy'.setup{
-  'neovim/nvim-lspconfig', -- LSP
   {
-    'lvimuser/lsp-inlayhints.nvim', -- LSP inlay hints
-    branch = 'anticonceal',
+    'neovim/nvim-lspconfig', -- LSP
+    dependencies = {
+      'hrsh7th/cmp-nvim-lsp',
+    },
+    priority = 1000,
+    config = function()
+      local capabilities = require('cmp_nvim_lsp').default_capabilities()
+      local lspconfig = require'lspconfig'
+      lspconfig.rust_analyzer.setup {
+        on_attach = function(client, bufnr)
+          vim.lsp.inlay_hint(bufnr, true)
+        end,
+        capabilities = capabilities,
+      }
+    end
+  },
+  {
+    'nvim-telescope/telescope.nvim', tag = '0.1.2',
+    dependencies = { 'nvim-lua/plenary.nvim' }
   },
   {
     'hrsh7th/nvim-cmp', -- Autocomplete
@@ -39,17 +55,43 @@ require'lazy'.setup{
       -- Basic snippets
       'rafamadriz/friendly-snippets',
     },
+    config = function()
+      local cmp = require 'cmp'
+      local luasnip = require 'luasnip'
+
+      -- luasnip
+      require'luasnip.loaders.from_vscode'.lazy_load()
+      luasnip.config.setup {}
+
+      -- cmp
+      cmp.setup {
+        snippet = {
+          expand = function(args)
+            luasnip.lsp_expand(args.body)
+          end
+        },
+        sources = {
+          { name = 'nvim_lsp' },
+          { name = 'luasnip' },
+        },
+        mapping = {
+          ["<cr>"] = cmp.mapping.confirm{ select = true };
+          ["<s-tab>"] = cmp.mapping.select_prev_item();
+          ["<tab>"] = cmp.mapping.select_next_item();
+          ['<C-b>'] = cmp.mapping.scroll_docs(-4),
+          ['<C-f>'] = cmp.mapping.scroll_docs(4),
+        }
+      }
+    end
   },
-  {
-    'decaycs/decay.nvim',	-- Color
-  },
+  { "catppuccin/nvim", name = "catppuccin", priority = 1000 }, -- Color
   {
     'folke/which-key.nvim', -- Useful for learning keybinds
     opts = {}
   },
-  { "lukas-reineke/indent-blankline.nvim" }, -- Indent
+  { "lukas-reineke/indent-blankline.nvim" }, -- Indent guides
   {
-    -- Adds git releated signs to the gutter, as well as utilities 
+    -- Adds git releated signs to the gutter, as well as utilities
     'lewis6991/gitsigns.nvim',
     opts = {
       -- See `:help gitsigns.txt`
@@ -61,27 +103,41 @@ require'lazy'.setup{
         changedelete = { text = '~' },
       },
       on_attach = function(bufnr)
-        vim.keymap.set('n', '<leader>gp', require('gitsigns').prev_hunk, 
+        vim.keymap.set('n', '<leader>gp', require('gitsigns').prev_hunk,
         { buffer = bufnr, desc = '[G]o to [P]revious Hunk' })
-        vim.keymap.set('n', '<leader>gn', require('gitsigns').next_hunk, 
+        vim.keymap.set('n', '<leader>gn', require('gitsigns').next_hunk,
         { buffer = bufnr, desc = '[G]o to [N]ext Hunk' })
-        vim.keymap.set('n', '<leader>gr', require('gitsigns').preview_hunk, 
+        vim.keymap.set('n', '<leader>gr', require('gitsigns').preview_hunk,
         { buffer = bufnr, desc = 'P[r]eview [H]unk' })
       end,
     },
   },
-}
-
--- Color scheme
--------------------------------------------------------------------------------
-require'decay'.setup{
-  style = 'dark',
+  { -- Status line
+    'nvim-lualine/lualine.nvim',
+    dependencies = {
+      'nvim-tree/nvim-web-devicons',
+    },
+    config = function() require'lualine'.setup{} end
+  },
+  { -- Pairs
+    'echasnovski/mini.pairs',
+    version = false,
+    config = function() require'mini.pairs'.setup {} end
+  },
+  { -- adhd
+    'j-hui/fidget.nvim',
+    tag = 'legacy',
+    config = function() require'fidget'.setup{} end
+  }
 }
 
 -- General vim options
 -------------------------------------------------------------------------------
 vim.cmd[[set colorcolumn=80]]
 vim.cmd[[highlight ColorColumn ctermbg=1 guibg=Black]]
+
+-- Colorscheme
+vim.cmd.colorscheme "catppuccin"
 
 -- Tabs insert spaces
 vim.opt.tabstop = 4
@@ -120,47 +176,7 @@ vim.o.termguicolors = true
 -- Completion behavior
 vim.o.completeopt = 'menuone,noselect'
 
--- nvim-cmp configuration
--------------------------------------------------------------------------------
-local cmp = require 'cmp'
-local luasnip = require 'luasnip'
-require'luasnip.loaders.from_vscode'.lazy_load()
-luasnip.config.setup {}
-
-cmp.setup {
-  snippet = {
-    expand = function(args)
-      luasnip.lsp_expand(args.body)
-    end
-  },
-  sources = {
-    { name = 'nvim_lsp' },
-    { name = 'luasnip' },
-  },
-  mapping = {
-    ["<cr>"] = cmp.mapping.confirm{ select = true };
-    ["<s-tab>"] = cmp.mapping.select_prev_item();
-    ["<tab>"] = cmp.mapping.select_next_item();
-    ['<C-b>'] = cmp.mapping.scroll_docs(-4),
-    ['<C-f>'] = cmp.mapping.scroll_docs(4),
-  }
-}
-
-local capabilities = require('cmp_nvim_lsp').default_capabilities()
-
--- Lsp config
--------------------------------------------------------------------------------
-local lspconfig = require'lspconfig'
-lspconfig.rust_analyzer.setup {
-  --capabilities = capabilities,
-  on_attach = function(client, bufnr)
-    require'lsp-inlayhints'.on_attach(client, bufnr)
-  end,
-}
-
-require'lsp-inlayhints'.setup {} -- Lsp inlayhints setup
-
--- Lsp format on save
+-- Format on save
 vim.cmd [[autocmd BufWritePre * lua vim.lsp.buf.format()]]
 
 -- Lsp mappings
@@ -180,9 +196,17 @@ nmap('<leader>q', vim.diagnostic.setloclist, "Diagnostic list")
 nmap('<leader>r', vim.lsp.buf.rename, "[R]ename")
 nmap('<leader>c', vim.lsp.buf.code_action, "[C]ode action")
 nmap('<leader>d', vim.lsp.buf.definition, "Jump to [d]efinition")
+nmap('<leader>D', vim.lsp.buf.declaration, "Jump to [D]eclaration")
 nmap('<leader>i', vim.lsp.buf.implementation, "Jump to [i]mplementation")
 nmap('<leader>f', vim.lsp.buf.references, "Find re[f]erences")
 nmap('K', vim.lsp.buf.hover, "Hover documentation")
 nmap('<C-k>', vim.lsp.buf.signature_help, 'Signature documentation')
+
+local builtin = require('telescope.builtin')
+vim.keymap.set('n', '<leader>ff', builtin.find_files, {})
+vim.keymap.set('n', '<leader>fs', builtin.lsp_document_symbols, {})
+vim.keymap.set('n', '<leader>fg', builtin.live_grep, {})
+vim.keymap.set('n', '<leader>fb', builtin.buffers, {})
+vim.keymap.set('n', '<leader>fh', builtin.help_tags, {})
 
 -- vim: ts=2 sts=2 sw=2 et
