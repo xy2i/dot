@@ -22,7 +22,7 @@ vim.opt.rtp:prepend(lazypath)
 
 -- Plugins
 -------------------------------------------------------------------------------
-require'lazy'.setup{
+require 'lazy'.setup {
   {
     'neovim/nvim-lspconfig', -- LSP
     dependencies = {
@@ -30,18 +30,29 @@ require'lazy'.setup{
     },
     priority = 1000,
     config = function()
-      local capabilities = require('cmp_nvim_lsp').default_capabilities()
-      local lspconfig = require'lspconfig'
+      -- Rust-analyzer
+      local capabilities = require 'cmp_nvim_lsp'.default_capabilities()
+      local lspconfig = require 'lspconfig'
       lspconfig.rust_analyzer.setup {
-        on_attach = function(client, bufnr)
+        on_attach = function(_client, bufnr)
           vim.lsp.inlay_hint(bufnr, true)
         end,
         capabilities = capabilities,
       }
+      lspconfig.lua_ls.setup {
+        settings = {
+          Lua = {
+            diagnostics = {
+              globals = { 'vim' }
+            }
+          }
+        }
+      }
     end
   },
   {
-    'nvim-telescope/telescope.nvim', tag = '0.1.2',
+    'nvim-telescope/telescope.nvim',
+    tag = '0.1.2',
     dependencies = { 'nvim-lua/plenary.nvim' }
   },
   {
@@ -60,7 +71,7 @@ require'lazy'.setup{
       local luasnip = require 'luasnip'
 
       -- luasnip
-      require'luasnip.loaders.from_vscode'.lazy_load()
+      require 'luasnip.loaders.from_vscode'.lazy_load()
       luasnip.config.setup {}
 
       -- cmp
@@ -75,16 +86,20 @@ require'lazy'.setup{
           { name = 'luasnip' },
         },
         mapping = {
-          ["<cr>"] = cmp.mapping.confirm{ select = true };
-          ["<s-tab>"] = cmp.mapping.select_prev_item();
-          ["<tab>"] = cmp.mapping.select_next_item();
+          ["<cr>"] = cmp.mapping.confirm { select = true },
+          ["<s-tab>"] = cmp.mapping.select_prev_item(),
+          ["<tab>"] = cmp.mapping.select_next_item(),
           ['<C-b>'] = cmp.mapping.scroll_docs(-4),
           ['<C-f>'] = cmp.mapping.scroll_docs(4),
         }
       }
     end
   },
-  { "catppuccin/nvim", name = "catppuccin", priority = 1000 }, -- Color
+  {
+    "catppuccin/nvim",
+    name = "catppuccin",
+    priority = 1000
+  },                        -- Color
   {
     'folke/which-key.nvim', -- Useful for learning keybinds
     opts = {}
@@ -103,12 +118,12 @@ require'lazy'.setup{
         changedelete = { text = '~' },
       },
       on_attach = function(bufnr)
-        vim.keymap.set('n', '<leader>gp', require('gitsigns').prev_hunk,
-        { buffer = bufnr, desc = '[G]o to [P]revious Hunk' })
-        vim.keymap.set('n', '<leader>gn', require('gitsigns').next_hunk,
-        { buffer = bufnr, desc = '[G]o to [N]ext Hunk' })
-        vim.keymap.set('n', '<leader>gr', require('gitsigns').preview_hunk,
-        { buffer = bufnr, desc = 'P[r]eview [H]unk' })
+        vim.keymap.set('n', '<leader>gp', require 'gitsigns'.prev_hunk,
+          { buffer = bufnr, desc = '[G]o to [P]revious Hunk' })
+        vim.keymap.set('n', '<leader>gn', require 'gitsigns'.next_hunk,
+          { buffer = bufnr, desc = '[G]o to [N]ext Hunk' })
+        vim.keymap.set('n', '<leader>gr', require 'gitsigns'.preview_hunk,
+          { buffer = bufnr, desc = 'P[r]eview [H]unk' })
       end,
     },
   },
@@ -117,25 +132,24 @@ require'lazy'.setup{
     dependencies = {
       'nvim-tree/nvim-web-devicons',
     },
-    config = function() require'lualine'.setup{} end
+    opts = {},
   },
   { -- Pairs
-    'echasnovski/mini.pairs',
-    version = false,
-    config = function() require'mini.pairs'.setup {} end
+    'windwp/nvim-autopairs',
+    event = "InsertEnter",
+    opts = {},
   },
   { -- adhd
     'j-hui/fidget.nvim',
     tag = 'legacy',
-    config = function() require'fidget'.setup{} end
+    opts = {},
   }
 }
 
 -- General vim options
 -------------------------------------------------------------------------------
-vim.cmd[[set colorcolumn=80]]
-vim.cmd[[highlight ColorColumn ctermbg=1 guibg=Black]]
-
+vim.cmd [[set colorcolumn=80]]
+vim.cmd [[highlight ColorColumn ctermbg=1 guibg=Black]]
 -- Colorscheme
 vim.cmd.colorscheme "catppuccin"
 
@@ -147,8 +161,9 @@ vim.opt.expandtab = true
 vim.bo.softtabstop = 0
 
 -- Trailing whitespace
-vim.opt.listchars:append({ trail = '~' })
+vim.opt.listchars:append({ trail = '#' })
 vim.opt.list = true
+vim.cmd [[highlight Whitespace ctermfg=Red guifg=Red]]
 
 -- System clipboard
 vim.o.clipboard = 'unnamedplus'
@@ -186,7 +201,7 @@ local nmap = function(keys, func, desc)
     desc = 'LSP: ' .. desc
   end
 
-  vim.keymap.set('n', keys, func, { buffer = bufnr, desc = desc })
+  vim.keymap.set('n', keys, func, { desc = desc })
 end
 
 nmap('<leader>e', vim.diagnostic.open_float, "Open diagnostic message")
@@ -202,7 +217,7 @@ nmap('<leader>f', vim.lsp.buf.references, "Find re[f]erences")
 nmap('K', vim.lsp.buf.hover, "Hover documentation")
 nmap('<C-k>', vim.lsp.buf.signature_help, 'Signature documentation')
 
-local builtin = require('telescope.builtin')
+local builtin = require 'telescope.builtin'
 vim.keymap.set('n', '<leader>ff', builtin.find_files, {})
 vim.keymap.set('n', '<leader>fs', builtin.lsp_document_symbols, {})
 vim.keymap.set('n', '<leader>fg', builtin.live_grep, {})
