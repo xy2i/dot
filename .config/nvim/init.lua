@@ -48,6 +48,7 @@ require 'lazy'.setup {
           }
         }
       }
+      lspconfig.typst_lsp.setup {}
     end
   },
   {
@@ -98,7 +99,10 @@ require 'lazy'.setup {
   {
     "catppuccin/nvim",
     name = "catppuccin",
-    priority = 1000
+    priority = 1000,
+    opts = {
+      transparent_background = true,
+    }
   },                        -- Color
   {
     'folke/which-key.nvim', -- Useful for learning keybinds
@@ -143,7 +147,12 @@ require 'lazy'.setup {
     'j-hui/fidget.nvim',
     tag = 'legacy',
     opts = {},
-  }
+  },
+  {
+    'kaarmu/typst.vim',
+    ft = 'typst',
+    lazy = false,
+  },
 }
 
 -- General vim options
@@ -180,7 +189,8 @@ vim.o.breakindent = true
 vim.o.undofile = true
 
 -- Highlight on search
-vim.o.hlsearch = false
+vim.o.hlsearch = true
+vim.o.incsearch = true
 -- Case insensitive search
 vim.o.ignorecase = true
 vim.o.smartcase = true
@@ -218,7 +228,7 @@ nmap('K', vim.lsp.buf.hover, "Hover documentation")
 nmap('<C-k>', vim.lsp.buf.signature_help, 'Signature documentation')
 
 local builtin = require 'telescope.builtin'
-vim.keymap.set('n', '<leader>ff', builtin.find_files, {})
+vim.keymap.set('n', '<leader>ff', builtin.find_files, { desc = "Find Files" })
 vim.keymap.set('n', '<leader>fs', builtin.lsp_document_symbols, {})
 vim.keymap.set('n', '<leader>fg', builtin.live_grep, {})
 vim.keymap.set('n', '<leader>fb', builtin.buffers, {})
